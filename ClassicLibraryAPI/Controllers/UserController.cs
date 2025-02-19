@@ -66,5 +66,15 @@ namespace ClassicLibraryAPI.Controllers {
             }
             throw new Exception("Failed to Upsert User");
         }
+
+        [HttpDelete]
+        public IActionResult DeleteUser(int userId) {
+            string sql = "EXEC ClassicLibrarySchema.spUser_Delete @UserId = " + userId.ToString();
+
+            if (_dapper.ExecuteSql(sql)) {
+                return Ok();
+            }
+            throw new Exception("Failed to delete user");
+        }
     }
 }
