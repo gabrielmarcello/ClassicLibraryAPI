@@ -72,5 +72,34 @@ namespace ClassicLibraryAPI.Controllers {
             }
             throw new Exception("Passwords do not match!");
         }
+
+        [AllowAnonymous]
+        [HttpPost("Login")]
+        public IActionResult Login(UserForLoginDTO userForLogin) {
+            string sqlForHashAndSalt = "EXEC ClassicLibrarySchema.spLoginConfirmation_Get @Email = @EmailParam";
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            sqlParameters.Add("@EmailParam", userForLogin.Email, DbType.String);
+
+            UserForLoginConfirmationDTO userConfirmation = _dapper.LoadDataSingleWithParameters<UserForLoginConfirmationDTO>(sqlForHashAndSalt, sqlParameters);
+
+            byte[] passwordHash = _authHelper.GetPasswordHash(userForLogin.Password, userConfirmation.PasswordSalt);
+
+            for (int index = 0; index < passwordHash.Length; index++) {
+                if (passwordHash[index] != userConfirmation.PasswordHash[index]) {
+                    return StatusCode(401, "Incorret Password!");
+                }
+            }
+
+            string userIdSql = @"SELECT UserId FROM ClassicLibrarySchema.Users WHERE Email = '" +
+                userForLogin.Email + "'";
+
+            int userId = _dapper.LoadDataSingle<int>(userIdSql);
+
+            return Ok(new Dictionary<string, string>{
+                {"token", _authHelper.CreateToken(userId)}
+            });
+        }
     }
 }
