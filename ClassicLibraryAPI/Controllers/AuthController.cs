@@ -10,6 +10,7 @@ using Dapper;
 using System.Data;
 
 namespace ClassicLibraryAPI.Controllers {
+
     [ApiController]
     public class AuthController : ControllerBase {
 
@@ -100,6 +101,14 @@ namespace ClassicLibraryAPI.Controllers {
             return Ok(new Dictionary<string, string>{
                 {"token", _authHelper.CreateToken(userId)}
             });
+        }
+
+        [HttpPut("ResetPassword")]
+        public IActionResult ResetPassword(UserForLoginDTO userForSetPassword) {
+            if (_authHelper.SetPassword(userForSetPassword)) {
+                return Ok();
+            }
+            throw new Exception("Failed to update password!");
         }
     }
 }
