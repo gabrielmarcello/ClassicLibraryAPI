@@ -10,7 +10,7 @@ using Dapper;
 using System.Data;
 
 namespace ClassicLibraryAPI.Controllers {
-
+    [Authorize]
     [ApiController]
     public class AuthController : ControllerBase {
 

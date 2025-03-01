@@ -7,7 +7,7 @@ using System.Data;
 namespace ClassicLibraryAPI.Controllers {
     [ApiController]
     [Route("[controller]")]
-    public class BookController {
+    public class BookController : ControllerBase {
 
         private readonly DataContextDapper _dapper;
 
