@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ClassicLibraryAPI.Data;
 using ClassicLibraryAPI.Dtos;
+using ClassicLibraryAPI.Interfaces;
 using Dapper;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.IdentityModel.Tokens;
@@ -15,23 +16,11 @@ namespace ClassicLibraryAPI.Helpers {
 
         private readonly IConfiguration _config;
         private readonly DataContextDapper _dapper;
+        private readonly ICryptographyService _cryptographyService;
 
         public AuthHelper(IConfiguration config) {
             _config = config;
             _dapper = new DataContextDapper(config);
-        }
-
-        public byte[] GetPasswordHash(string password, byte[] passwordSalt) {
-            string passwordSaltPlusString = _config.GetSection("AppSettings:PasswordKey").Value +
-                Convert.ToBase64String(passwordSalt);
-
-            return KeyDerivation.Pbkdf2(
-                password: password,
-                salt: Encoding.ASCII.GetBytes(passwordSaltPlusString),
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8
-            );
         }
 
         public bool SetPassword(UserForLoginDTO userForSetPassword) {
@@ -41,7 +30,7 @@ namespace ClassicLibraryAPI.Helpers {
                 rng.GetNonZeroBytes(passwordSalt);
             }
 
-            byte[] passwordHash = GetPasswordHash(userForSetPassword.Password, passwordSalt);
+            byte[] passwordHash = _cryptographyService.GetPasswordHash(userForSetPassword.Password, passwordSalt);
 
             string sqlAddAuth = @"EXEC ClassicLibrarySchema.spRegistration_Upsert
                 @Email = @EmailParam, 
