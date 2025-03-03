@@ -2,6 +2,7 @@
 using ClassicLibraryAPI.Data;
 using ClassicLibraryAPI.Dtos;
 using ClassicLibraryAPI.Interfaces;
+using ClassicLibraryAPI.Services;
 using Dapper;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +22,7 @@ namespace ClassicLibraryAPI.Helpers {
         public AuthHelper(IConfiguration config) {
             _config = config;
             _dapper = new DataContextDapper(config);
+            _cryptographyService = new CryptographyService(config);
         }
 
         public bool SetPassword(UserForLoginDTO userForSetPassword) {

@@ -8,6 +8,8 @@ using ClassicLibraryAPI.Models;
 using AutoMapper;
 using Dapper;
 using System.Data;
+using ClassicLibraryAPI.Interfaces;
+using ClassicLibraryAPI.Services;
 
 namespace ClassicLibraryAPI.Controllers {
     [Authorize]
@@ -18,10 +20,12 @@ namespace ClassicLibraryAPI.Controllers {
         private readonly DataContextDapper _dapper;
         private readonly AuthHelper _authHelper;
         private readonly IMapper _mapper;
+        private readonly ICryptographyService _cryptographyService;
 
         public AuthController(IConfiguration config) {
             _dapper = new DataContextDapper(config);
             _authHelper = new AuthHelper(config);
+            _cryptographyService = new CryptographyService(config);
             _mapper = new Mapper(new MapperConfiguration(cfg => {
                 cfg.CreateMap<UserForRegistrationDTO, User>();
             }));
@@ -86,7 +90,7 @@ namespace ClassicLibraryAPI.Controllers {
 
             UserForLoginConfirmationDTO userConfirmation = _dapper.LoadDataSingleWithParameters<UserForLoginConfirmationDTO>(sqlForHashAndSalt, sqlParameters);
 
-            byte[] passwordHash = _authHelper.GetPasswordHash(userForLogin.Password, userConfirmation.PasswordSalt);
+            byte[] passwordHash = _cryptographyService.GetPasswordHash(userForLogin.Password, userConfirmation.PasswordSalt);
 
             for (int index = 0; index < passwordHash.Length; index++) {
                 if (passwordHash[index] != userConfirmation.PasswordHash[index]) {
