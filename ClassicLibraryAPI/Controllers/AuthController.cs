@@ -12,6 +12,7 @@ using System.Data;
 namespace ClassicLibraryAPI.Controllers {
     [Authorize]
     [ApiController]
+    [Route("[controller]")]
     public class AuthController : ControllerBase {
 
         private readonly DataContextDapper _dapper;
@@ -109,6 +110,19 @@ namespace ClassicLibraryAPI.Controllers {
                 return Ok();
             }
             throw new Exception("Failed to update password!");
+        }
+
+        [HttpGet("RefreshToken")]
+        public IActionResult RefreshToken() {
+            string userId = User.FindFirst("userId")?.Value + "";
+
+            string userIdSql = "SELECT UserId FROM ClassicLibrarySchema.Users WHERE UserId = " + userId;
+
+            int userIdFromDb = _dapper.LoadDataSingle<int>(userIdSql);
+
+            return Ok(new Dictionary<string, string> {
+                {"token", _authHelper.CreateToken(userIdFromDb) }
+            });
         }
     }
 }
