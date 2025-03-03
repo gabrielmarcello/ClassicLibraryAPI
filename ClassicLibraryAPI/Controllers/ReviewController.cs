@@ -39,7 +39,6 @@ namespace ClassicLibraryAPI.Controllers {
             return _dapper.LoadDataWithParameters<Review>(sql, sqlParameters);
         }
 
-        [Authorize]
         [ HttpPut("UpsertReview")]
         public IActionResult UpsertReview(Review reviewToUpsert) {
             string sql = @"EXEC ClassicLibrarySchema.spReviewUpsert
@@ -71,8 +70,25 @@ namespace ClassicLibraryAPI.Controllers {
                 return Ok();
             }
 
-            throw new Exception("Failed to Upsert User");
+            throw new Exception("Failed to Upsert Review");
+        }
 
+        [HttpDelete("DeleteReview/{reviewId}")]
+        public IActionResult DeleteReview (int reviewId) {
+            string sql = @"EXEC ClassicLibrarySchema.spDeleteReview
+                            @UserId = @UserIdParameter,
+                            @ResenhaId = @ResenhaIdParameter";
+
+            DynamicParameters sqlParameters = new DynamicParameters();
+
+            sqlParameters.Add("@UserIdParameter", this.User.FindFirst("userId")?.Value, DbType.Int32);
+            sqlParameters.Add("@ResenhaIdParameter", reviewId, DbType.Int32);
+
+            if(_dapper.ExecuteSqlWithParameters(sql, sqlParameters)) {
+                return Ok();
+            }
+
+            throw new Exception("Failed to Delete Review");
         }
     }
 }
