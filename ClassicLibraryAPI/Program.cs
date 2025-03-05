@@ -10,13 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Configuration.AddEnvironmentVariables();
-
-var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? builder.Configuration["Stripe:SecretKey"];
-
-StripeConfiguration.ApiKey = stripeSecretKey;
-
-builder.Services.AddSingleton<StripeService>(new StripeService(stripeSecretKey));
+builder.Services.AddSingleton<StripeService>();
 
 builder.Services.AddCors((options) =>
 {

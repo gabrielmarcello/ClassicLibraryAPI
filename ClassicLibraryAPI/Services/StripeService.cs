@@ -5,10 +5,9 @@ using Stripe;
 namespace ClassicLibraryAPI.Services {
     public class StripeService {
 
-        private readonly string _secretKey; 
+        private readonly string _secretKey = "";
 
-        public StripeService(string StripeSecretKey) {
-            _secretKey = StripeSecretKey;
+        public StripeService() {
             StripeConfiguration.ApiKey = _secretKey;
         }
 
