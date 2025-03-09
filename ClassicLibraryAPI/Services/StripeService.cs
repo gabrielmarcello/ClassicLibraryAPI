@@ -5,10 +5,8 @@ using Stripe;
 namespace ClassicLibraryAPI.Services {
     public class StripeService {
 
-        private readonly string _secretKey = "";
-
-        public StripeService() {
-            StripeConfiguration.ApiKey = _secretKey;
+        public StripeService(IConfiguration config) {
+            StripeConfiguration.ApiKey = config.GetSection("AppSettings:StripeKey").Value;
         }
 
         public Session CriarSessaoCheckout(Pedido pedido) {

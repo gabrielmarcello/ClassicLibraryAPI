@@ -31,6 +31,7 @@ builder.Services.AddCors((options) =>
 });
 
 string? tokenKeyString = builder.Configuration.GetSection("AppSettings:TokenKey").Value;
+string? stripeKey = builder.Configuration.GetSection("AppSettings:StripeKey").Value;
 
 SymmetricSecurityKey tokenKey = new SymmetricSecurityKey(
         Encoding.UTF8.GetBytes(
