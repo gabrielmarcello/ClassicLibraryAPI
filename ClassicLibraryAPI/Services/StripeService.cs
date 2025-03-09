@@ -25,8 +25,8 @@ namespace ClassicLibraryAPI.Services {
                     Quantity = i.Quantidade,
                 }).ToList(),
                 Mode = "payment",
-                SuccessUrl = "https://localhost:5001/api/pagamento/success",
-                CancelUrl = "https://localhost:5001/api/pagamento/cancel",
+                SuccessUrl = "https://localhost:5001/pedido/success",
+                CancelUrl = "https://localhost:5001/pedido/cancel",
             };
 
             var service = new SessionService();
