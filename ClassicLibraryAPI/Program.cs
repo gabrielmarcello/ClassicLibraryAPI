@@ -1,3 +1,4 @@
+using ClassicLibraryAPI.Interfaces;
 using ClassicLibraryAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -11,6 +12,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<StripeService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddCors((options) =>
 {
@@ -52,7 +54,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.UseCors("DevCors");
     app.UseSwagger();
