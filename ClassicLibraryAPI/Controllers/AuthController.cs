@@ -126,10 +126,15 @@ namespace ClassicLibraryAPI.Controllers {
 
         [HttpPut("ResetPassword")]
         public IActionResult ResetPassword(UserForLoginDTO userForSetPassword) {
-            if (_authHelper.SetPassword(userForSetPassword)) {
-                return Ok();
+            try {
+                if (_authHelper.SetPassword(userForSetPassword)) {
+                    return Ok();
+                }
             }
-            throw new Exception("Failed to update password!");
+            catch (Exception ex) {
+                return StatusCode(500, "An unexpected error occured, please try again later");
+            }
+            return BadRequest();
         }
 
         [HttpGet("RefreshToken")]
