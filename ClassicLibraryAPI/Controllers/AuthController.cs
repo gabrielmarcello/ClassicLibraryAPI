@@ -10,6 +10,7 @@ using Dapper;
 using System.Data;
 using ClassicLibraryAPI.Interfaces;
 using ClassicLibraryAPI.Services;
+using Microsoft.Data.SqlClient;
 
 namespace ClassicLibraryAPI.Controllers {
     [Authorize]
@@ -89,29 +90,38 @@ namespace ClassicLibraryAPI.Controllers {
             sqlParameters.Add("@EmailParam", userForLogin.Email, DbType.String);
 
             try {
-
                 UserForLoginConfirmationDTO userConfirmation = _dapper.LoadDataSingleWithParameters<UserForLoginConfirmationDTO>(sqlForHashAndSalt, sqlParameters);
 
                 byte[] passwordHash = _cryptographyService.GetPasswordHash(userForLogin.Password, userConfirmation.PasswordSalt);
 
-                for (int index = 0; index < passwordHash.Length; index++) {
-                    if (passwordHash[index] != userConfirmation.PasswordHash[index]) {
-                        return StatusCode(401, "Incorret Password!");
-                    }
+                if (!passwordHash.SequenceEqual(userConfirmation.PasswordHash)) {
+                    return Unauthorized("Incorrect Password!");
                 }
+
+                string userIdSql = @"SELECT UserId FROM ClassicLibrarySchema.Users WHERE Email = @EmailParameter";
+
+                DynamicParameters parameters = new DynamicParameters();
+                parameters.Add("@EmailParameter", userForLogin.Email, DbType.String);
+
+
+                int userId = _dapper.LoadDataSingleWithParameters<int>(userIdSql, parameters);
+
+                return Ok(new Dictionary<string, string>{
+                    {"token", _authHelper.CreateToken(userId)}
+                });
+
             }
             catch (InvalidOperationException ex) {
                 return StatusCode(500, "Couldn't find your account");
             }
 
-            string userIdSql = @"SELECT UserId FROM ClassicLibrarySchema.Users WHERE Email = '" +
-                userForLogin.Email + "'";
+            catch (SqlException ex) {
+                return StatusCode(500, "Internal error, please try again later");
+            }
 
-            int userId = _dapper.LoadDataSingle<int>(userIdSql);
-
-            return Ok(new Dictionary<string, string>{
-                {"token", _authHelper.CreateToken(userId)}
-            });
+            catch (Exception ex) {
+                return StatusCode(500, "An unexpected error occured, please try again later");
+            }
         }
 
         [HttpPut("ResetPassword")]

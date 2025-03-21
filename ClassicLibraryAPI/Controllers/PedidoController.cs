@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ClassicLibraryAPI.Controllers {
     [ApiController]
     [Route("[controller]")]
-    //[AllowAnonymous]
+    [AllowAnonymous]
     public class PedidoController : ControllerBase{
 
         private readonly StripeService _stripeService;
