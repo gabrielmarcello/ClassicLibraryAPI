@@ -88,14 +88,20 @@ namespace ClassicLibraryAPI.Controllers {
 
             sqlParameters.Add("@EmailParam", userForLogin.Email, DbType.String);
 
-            UserForLoginConfirmationDTO userConfirmation = _dapper.LoadDataSingleWithParameters<UserForLoginConfirmationDTO>(sqlForHashAndSalt, sqlParameters);
+            try {
 
-            byte[] passwordHash = _cryptographyService.GetPasswordHash(userForLogin.Password, userConfirmation.PasswordSalt);
+                UserForLoginConfirmationDTO userConfirmation = _dapper.LoadDataSingleWithParameters<UserForLoginConfirmationDTO>(sqlForHashAndSalt, sqlParameters);
 
-            for (int index = 0; index < passwordHash.Length; index++) {
-                if (passwordHash[index] != userConfirmation.PasswordHash[index]) {
-                    return StatusCode(401, "Incorret Password!");
+                byte[] passwordHash = _cryptographyService.GetPasswordHash(userForLogin.Password, userConfirmation.PasswordSalt);
+
+                for (int index = 0; index < passwordHash.Length; index++) {
+                    if (passwordHash[index] != userConfirmation.PasswordHash[index]) {
+                        return StatusCode(401, "Incorret Password!");
+                    }
                 }
+            }
+            catch (InvalidOperationException ex) {
+                return StatusCode(500, "Couldn't find your account");
             }
 
             string userIdSql = @"SELECT UserId FROM ClassicLibrarySchema.Users WHERE Email = '" +
