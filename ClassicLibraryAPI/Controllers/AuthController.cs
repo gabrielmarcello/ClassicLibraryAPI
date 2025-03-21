@@ -139,15 +139,24 @@ namespace ClassicLibraryAPI.Controllers {
 
         [HttpGet("RefreshToken")]
         public IActionResult RefreshToken() {
-            string userId = User.FindFirst("userId")?.Value + "";
 
-            string userIdSql = "SELECT UserId FROM ClassicLibrarySchema.Users WHERE UserId = " + userId;
+            try {
+                string userId = User.FindFirst("userId")?.Value + "";
 
-            int userIdFromDb = _dapper.LoadDataSingle<int>(userIdSql);
+                string userIdSql = "SELECT UserId FROM ClassicLibrarySchema.Users WHERE UserId = " + userId;
 
-            return Ok(new Dictionary<string, string> {
-                {"token", _authHelper.CreateToken(userIdFromDb) }
-            });
+                int userIdFromDb = _dapper.LoadDataSingle<int>(userIdSql);
+
+                return Ok(new Dictionary<string, string> {
+                    {"token", _authHelper.CreateToken(userIdFromDb) }
+                });
+            } 
+            catch (SqlException ex) {
+                return StatusCode(500, "Internal error, please try again later");
+            } 
+            catch (Exception ex) {
+                return StatusCode(500, "An unexpected error occured, please try again later");
+            }
         }
     }
 }
