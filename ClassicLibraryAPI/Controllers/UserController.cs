@@ -9,7 +9,7 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace ClassicLibraryAPI.Controllers {
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class UserController : ControllerBase {

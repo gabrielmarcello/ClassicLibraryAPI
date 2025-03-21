@@ -1,7 +1,10 @@
 ﻿using ClassicLibraryAPI.Data;
+using ClassicLibraryAPI.Interfaces;
 using ClassicLibraryAPI.Models;
+using ClassicLibraryAPI.Services;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using System.Data;
@@ -12,83 +15,52 @@ namespace ClassicLibraryAPI.Controllers {
     [Route("[controller]")]
     public class ReviewController : ControllerBase {
 
-        private readonly DataContextDapper _dapper;
+        private readonly IReviewService _reviewService;
 
         public ReviewController(IConfiguration config) {
-            _dapper = new DataContextDapper(config);
+            _reviewService = new ReviewService(config);
         }
 
         [AllowAnonymous]
         [HttpGet("Resenhas/{resenhaId}/{userId}")]
         public IEnumerable<Review> resenhas(int resenhaId, int userId) {
-            string sql = "EXEC ClassicLibrarySchema.spResenhaGet";
-            string parameters = "";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            if (resenhaId > 0) {
-                parameters += ", @ResenhaId = @ResenhaIdParameter";
-                sqlParameters.Add("@ResenhaIdParameter", resenhaId, DbType.Int32);
+            try {
+                return _reviewService.resenhas(resenhaId, userId);
+            } catch (Exception ex) {
+                return Enumerable.Empty<Review>();
             }
-
-            if (userId > 0) {
-                parameters += ", @UserId = @UserIdParameter";
-                sqlParameters.Add("@UserIdParameter", userId, DbType.Int32);
-            }
-
-            return _dapper.LoadDataWithParameters<Review>(sql, sqlParameters);
+            
         }
 
-        [ HttpPut("UpsertReview")]
+        [HttpPut("UpsertReview")]
         public IActionResult UpsertReview(Review reviewToUpsert) {
-            string sql = @"EXEC ClassicLibrarySchema.spReviewUpsert
-                            @UserId = @UserIdParameter,
-                            @LivroId = @LivroIdParameter,
-                            @Descricao = @DescricaoParameter,
-                            @Avaliacao = @AvaliacaoParameter,
-                            @Titulo = @TituloParameter";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            sqlParameters.Add("@UserIdParameter", this.User.FindFirst("userId")?.Value, DbType.Int32);
-            sqlParameters.Add("@ResenhaIdParameter", reviewToUpsert.ResenhaId, DbType.Int32);
-            sqlParameters.Add("@TituloParameter", reviewToUpsert.Titulo, DbType.String);
-            sqlParameters.Add("@AvaliacaoParameter", reviewToUpsert.Avaliacao, DbType.String);
-            sqlParameters.Add("@LivroIdParameter", reviewToUpsert.LivroId, DbType.Int32);
-            sqlParameters.Add("@DescricaoParameter", reviewToUpsert.Descricao, DbType.String);
-
-            if (reviewToUpsert.ResenhaId > 0) {
-                sql += ", @ResenhaId = @ResenhaIdParameter";
-                sqlParameters.Add("@ResenhaIdParameter", reviewToUpsert.ResenhaId, DbType.Int32);
+           string? userId = this.User.FindFirst("userId")?.Value;
+            try {
+                if (_reviewService.UpsertReview(reviewToUpsert, userId)) {
+                    return Ok();
+                }
             }
-
-            if(reviewToUpsert.Avaliacao <0 || reviewToUpsert.Avaliacao > 5) {
-                return BadRequest("The rate is invalid");
+            catch (Exception ex) {
+                return StatusCode(500, ex.Message);
             }
-
-            if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters)) {
-                return Ok();
-            }
-
-            throw new Exception("Failed to Upsert Review");
+           
+           return BadRequest();
         }
 
         [HttpDelete("DeleteReview/{reviewId}")]
         public IActionResult DeleteReview (int reviewId) {
-            string sql = @"EXEC ClassicLibrarySchema.spDeleteReview
-                            @UserId = @UserIdParameter,
-                            @ResenhaId = @ResenhaIdParameter";
+            string? userId = this.User.FindFirst("userId")?.Value;
 
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            sqlParameters.Add("@UserIdParameter", this.User.FindFirst("userId")?.Value, DbType.Int32);
-            sqlParameters.Add("@ResenhaIdParameter", reviewId, DbType.Int32);
-
-            if(_dapper.ExecuteSqlWithParameters(sql, sqlParameters)) {
-                return Ok();
+            try {
+                if (_reviewService.DeleteReview(reviewId, userId)) {
+                    return Ok();
+                }
+            }
+            catch (Exception ex) {
+                return StatusCode(500, ex.Message);
             }
 
-            throw new Exception("Failed to Delete Review");
+            return BadRequest();
         }
     }
 }
