@@ -139,7 +139,6 @@ namespace ClassicLibraryAPI.Controllers {
 
         [HttpGet("RefreshToken")]
         public IActionResult RefreshToken() {
-
             try {
                 string userId = User.FindFirst("userId")?.Value + "";
 

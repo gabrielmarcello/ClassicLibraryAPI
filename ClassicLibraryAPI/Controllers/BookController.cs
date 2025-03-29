@@ -1,5 +1,7 @@
 ﻿using ClassicLibraryAPI.Data;
+using ClassicLibraryAPI.Interfaces;
 using ClassicLibraryAPI.Models;
+using ClassicLibraryAPI.Services;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -9,31 +11,15 @@ namespace ClassicLibraryAPI.Controllers {
     [Route("[controller]")]
     public class BookController : ControllerBase {
 
-        private readonly DataContextDapper _dapper;
+        private readonly IBookService _bookService;
 
         public BookController(IConfiguration config) {
-            _dapper = new DataContextDapper(config);
+            _bookService = new BookService(config);
         }
 
         [HttpGet("Books/{bookId}")]
         public IEnumerable<Book> GetBooks(int bookId) {
-            string sql = "EXEC ClassicLibrarySchema.spBooks_Get";
-
-            string stringParameters = "";
-
-            DynamicParameters sqlParameters = new DynamicParameters();
-
-            if (bookId > 0) {
-                stringParameters += ", @LivroId = @LivroIdParameter";
-                sqlParameters.Add("@LivroIdParameter", bookId, DbType.Int32);
-            }
-
-            if (stringParameters.Length > 0) {
-                sql += stringParameters.Substring(1);
-            }
-
-            IEnumerable<Book> books = _dapper.LoadDataWithParameters<Book>(sql, sqlParameters);
-            return books;
+            return _bookService.GetBooks(bookId);
 
         }
 
